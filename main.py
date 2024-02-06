@@ -12,7 +12,8 @@ import pandas as pd
 if __name__ == '__main__':
     dataset = pd.read_csv('top_posts.csv')
     X = dataset.iloc[:, 3].values
-    y = dataset.iloc[:, -1]
+    y = dataset.iloc[:, -1].values
+    y = pd.to_datetime(y, unit='s')
     print(X)
     print(y)
 
