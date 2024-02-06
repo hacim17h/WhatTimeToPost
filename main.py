@@ -10,9 +10,11 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LinearRegression
+
 if __name__ == '__main__':
     dataset = pd.read_csv('top_posts.csv')
-    X = dataset.iloc[:, 3:6].values
+    X = dataset.iloc[:, 3].values
     y = dataset.iloc[:, -1].values
     y = pd.to_datetime(y, unit='s').round('30min')
 
@@ -27,19 +29,38 @@ if __name__ == '__main__':
     y = time_in_minutes
 
     # The dataset is split into test and training sets and feature scaling is applied.
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
     sc = StandardScaler()
-    X_train = sc.fit_transform(X_train[:, :])
-    X_test = sc.transform(X_test[:, :])
+    X_train = sc.fit_transform(X_train.reshape(-1, 1))
+    X_test = sc.transform(X_test.reshape(-1, 1))
 
-    print("This is the x train and x test values")
-    print(X_train)
-    print(X_test)
+    # A simple linear regression model is applied and scatter plots are made for the dataset.
+    regressor = LinearRegression()
+    regressor.fit(X_train, y_train)
+    y_pred = regressor.predict(X_test)
 
-    print("This is the y train and y test values")
-    print(y_train)
-    print(y_test)
+    plt.scatter(X_train, y_train, color='red')
+    plt.plot(X_train, regressor.predict(X_train), color='blue')
+    plt.title('Upvotes vs Posting time (Training Set)')
+    plt.xlabel('Upvotes')
+    plt.ylabel('Post time')
+    plt.show()
+
+    plt.scatter(X_test, y_test, color='red')
+    plt.plot(X_train, regressor.predict(X_train), color='blue')
+    plt.title('Upvotes vs Posting time (Test Set)')
+    plt.xlabel('Upvotes')
+    plt.ylabel('Post time')
+    plt.show()
+
+    # print("This is the x train and x test values")
+    # print(X_train)
+    # print(X_test)
+    #
+    # print("This is the y train and y test values")
+    # print(y_train)
+    # print(y_test)
 
     # print(day_of_the_week)
     # print(X)
