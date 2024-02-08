@@ -14,27 +14,123 @@ from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 
-if __name__ == '__main__':
-    dataset = pd.read_csv('top_posts.csv')
-    X = dataset.iloc[:, 3:6].values
+"""Creates a CSV file formatted with the posting hour and upvote strength."""
+def post_formatter_a(filename, output_name):
+    # Reads the file and rounds the time to hours
+    dataset = pd.read_csv(filename, encoding='latin-1')
+    X = dataset.iloc[:, 3].values
     y = dataset.iloc[:, -1].values
-    y = pd.to_datetime(y, unit='s').round('30min')
+    y = pd.to_datetime(y, unit='s').round('h')
 
-    # This section creates a new column out of the timestamp data calculating the total minutes of that
-    # particular time to be more easily used by the model.
+    # Separates the time into hours and days of the week
+    hours = y.hour
+    minutes = y.minute
+    day_of_the_week = y.day_of_week
+    time_in_minutes = (hours * 60) + minutes
+    dataset['day_of_the_week'] = day_of_the_week
+    dataset['time_in_minutes'] = time_in_minutes
+    y = hours
+
+    # Stores the original data and then breaks it into groups based upon predetermined score levels
+    original_data = pd.concat([pd.DataFrame(y), pd.DataFrame(day_of_the_week), pd.DataFrame(X)], axis=1)
+    headers = ['posting_hour', 'day_of_the_week', 'score']
+    original_data.columns = headers
+
+    very_low_scores = original_data[(original_data['score'] >= 0) & (original_data['score'] <= 3)].sample(
+        n=1000, random_state=59)
+    low_scores = original_data[(original_data['score'] >= 4) & (original_data['score'] <= 24)].sample(
+        n=1000, random_state=59)
+    moderate_scores = original_data[(original_data['score'] >= 25) & (original_data['score'] <= 99)].sample(
+        n=1000, random_state=59)
+    high_scores = original_data[(original_data['score'] >= 100) & (original_data['score'] <= 999)].sample(
+        n=1000, random_state=59)
+    very_high_scores = original_data[original_data['score'] >= 1000].sample(n=1000, random_state=59)
+
+    # Re-combines the data that had been selected
+    grouped_data = pd.concat([very_low_scores, low_scores, moderate_scores, high_scores, very_high_scores])
+    scores = grouped_data.iloc[:, -1].values
+    X2 = grouped_data.iloc[:, 0].values
+
+    # Assigns an upvote strength based upon upvotes and transforms the data with the new score
+    upvote_strength = scores.copy()
+    upvote_strength[np.logical_and(upvote_strength >= 0, upvote_strength <= 3)] = 0
+    upvote_strength[np.logical_and(upvote_strength >= 4, upvote_strength <= 24)] = 1
+    upvote_strength[np.logical_and(upvote_strength >= 25, upvote_strength <= 99)] = 2
+    upvote_strength[np.logical_and(upvote_strength >= 100, upvote_strength <= 999)] = 3
+    upvote_strength[upvote_strength >= 1000] = 4
+
+    # Creates the CSV file with the cleaned and prepared data
+    combined_data = pd.concat([pd.DataFrame(X2), pd.DataFrame(upvote_strength)], axis=1)
+    headers = ['posting_hour', 'upvote_strength']
+    combined_data.columns = headers
+
+    file_path = output_name
+    combined_data.to_csv(file_path, index=False)
+
+
+if __name__ == '__main__':
+    post_formatter_a('data_posts_2.csv', 'clean_posts_24.csv')
+
+    # dataset = pd.read_csv('data_posts_2.csv', encoding='latin-1')
+    # X = dataset.iloc[:, 3].values
+    # y = dataset.iloc[:, -1].values
+    # #y = pd.to_datetime(y, unit='s').round('30min')
+    # y = pd.to_datetime(y, unit='s').round('h')
+    #
+    # # This section creates a new column out of the timestamp data calculating the total minutes of that
+    # # particular time to be more easily used by the model.
     # hours = y.hour
     # minutes = y.minute
     # day_of_the_week = y.day_of_week
     # time_in_minutes = (hours * 60) + minutes
     # dataset['day_of_the_week'] = day_of_the_week
     # dataset['time_in_minutes'] = time_in_minutes
-    # y = time_in_minutes
-
-    # combined_data = pd.concat([pd.DataFrame(X), pd.DataFrame(y)], axis=1)
-    # headers = ['score', 'comments', 'crossposts', 'time_in_minutes']
+    # y = hours
+    # # upvote_strength = X.copy()
+    # # upvote_strength[np.logical_and(upvote_strength >= 0, upvote_strength <= 3)] = 0
+    # # upvote_strength[np.logical_and(upvote_strength >= 4, upvote_strength <= 24)] = 1
+    # # upvote_strength[np.logical_and(upvote_strength >= 25, upvote_strength <= 99)] = 2
+    # # upvote_strength[np.logical_and(upvote_strength >= 100, upvote_strength <= 999)] = 3
+    # # upvote_strength[upvote_strength >= 1000] = 4
+    # # upvote_strength[np.logical_and(upvote_strength >= 10, upvote_strength <= 100)] = 0
+    # # upvote_strength[np.logical_and(upvote_strength >= 100, upvote_strength <= 1000)] = 1
+    # # upvote_strength[upvote_strength > 1000] = 2
+    # # upvote_strength[np.logical_and(upvote_strength >= 100, upvote_strength <= 200)] = 0
+    # # upvote_strength[np.logical_and(upvote_strength >= 201, upvote_strength <= 1000)] = 1
+    # # upvote_strength[upvote_strength > 1000] = 2
+    #
+    # original_data = pd.concat([pd.DataFrame(y), pd.DataFrame(day_of_the_week), pd.DataFrame(X)], axis=1)
+    # headers = ['posting_hour', 'day_of_the_week', 'score']
+    # original_data.columns = headers
+    # very_low_scores = original_data[(original_data['score'] >= 0) & (original_data['score'] <= 3)].sample(n=1000, random_state=59)
+    # low_scores = original_data[(original_data['score'] >= 4) & (original_data['score'] <= 24)].sample(n=1000, random_state=59)
+    # moderate_scores = original_data[(original_data['score'] >= 25) & (original_data['score'] <= 99)].sample(n=1000, random_state=59)
+    # high_scores = original_data[(original_data['score'] >= 100) & (original_data['score'] <= 999)].sample(n=1000, random_state=59)
+    # very_high_scores = original_data[original_data['score'] >= 1000].sample(n=1000, random_state=59)
+    # grouped_data = pd.concat([very_low_scores, low_scores, moderate_scores, high_scores, very_high_scores])
+    #
+    # scores = grouped_data.iloc[:, -1].values
+    # X2 = grouped_data.iloc[:, 0].values
+    # upvote_strength = scores.copy()
+    # upvote_strength[np.logical_and(upvote_strength >= 0, upvote_strength <= 3)] = 0
+    # upvote_strength[np.logical_and(upvote_strength >= 4, upvote_strength <= 24)] = 1
+    # upvote_strength[np.logical_and(upvote_strength >= 25, upvote_strength <= 99)] = 2
+    # upvote_strength[np.logical_and(upvote_strength >= 100, upvote_strength <= 999)] = 3
+    # upvote_strength[upvote_strength >= 1000] = 4
+    #
+    # # print("These are very low scores")
+    # # print(very_low_scores)
+    # #
+    # # print("These are very high scores")
+    # # print(very_high_scores)
+    #
+    # # combined_data = pd.concat([pd.DataFrame(y), pd.DataFrame(upvote_strength)], axis=1)
+    # combined_data = pd.concat([pd.DataFrame(X2), pd.DataFrame(upvote_strength)], axis=1)
+    # headers = ['posting_hour', 'upvote_strength']
     # combined_data.columns = headers
-    # file_path = 'clean_posts.csv'
+    # file_path = 'clean_posts_23.csv'
     # combined_data.to_csv(file_path, index=False)
+
 
     # # The dataset is split into test and training sets and feature scaling is applied.
     # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
