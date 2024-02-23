@@ -1,5 +1,7 @@
 # Name: Micah Calloway Student ID: 010663003
-
+import datetime
+from datetime import datetime, timedelta
+from datetime import time
 import numpy as np
 import pandas as pd
 from sklearn.tree import DecisionTreeClassifier
@@ -131,7 +133,8 @@ def post_formatter_c(filename, output_name):
     dataset['time_in_minutes'] = time_in_minutes
     y = hours
 
-    # Stores the original data and then breaks it into groups based upon predetermined score levels
+    # Stores the original data and then breaks it into groups based
+    # upon predetermined score levels
     original_data = pd.concat([pd.DataFrame(y), pd.DataFrame(day_of_the_week), pd.DataFrame(X)], axis=1)
     headers = ['posting_hour', 'day_of_the_week', 'score']
     original_data.columns = headers
@@ -144,7 +147,8 @@ def post_formatter_c(filename, output_name):
     scores = grouped_data.iloc[:, -1].values
     X2 = grouped_data.iloc[:, :-1].values
 
-    # Assigns an upvote strength based upon upvotes and transforms the data with the new score
+    # Assigns an upvote strength based upon upvotes and transforms the
+    # data with the new score
     upvote_strength = scores.copy()
     upvote_strength[upvote_strength == 0] = 0
     upvote_strength[upvote_strength >= 10000] = 1
@@ -156,6 +160,28 @@ def post_formatter_c(filename, output_name):
 
     file_path = output_name
     combined_data.to_csv(file_path, index=False)
+
+
+def predict_best_time(date, hour):
+    """Makes a prediction on what time the user should post based upon
+    the day they are posting and the time they want to post after. The
+    hour variable is in 24-hour format and accepts 0-23 and the
+    date variable is a date time object that will be converted
+    into a day of the week numeric format with 0-6 representing
+    Monday - Sunday after time zone conversions.
+    """
+
+    # Stores the users selected time and converts it to UTC
+    time_now = datetime.now()
+    utc_time_now = datetime.utcnow()
+    utc_offset = utc_time_now - time_now
+    print(f"the utc offset is: {utc_offset}")
+
+    selected_time = datetime.combine(date, hour)
+    print(f"The user selected time is: {selected_time}")
+
+    utc_time = selected_time + utc_offset
+    print(f"The user selected time in utc is: {utc_time}")
 
 
 if __name__ == '__main__':
@@ -179,6 +205,9 @@ if __name__ == '__main__':
     accuracy = accuracy_score(y_test, predictions)
     print(cm)
     print(f"The accuracy is {accuracy}")
+
+    hour = 17
+    predict_best_time(datetime.now(), time(hour, 0, 0))
 
 
 
