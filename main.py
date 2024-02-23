@@ -1,18 +1,10 @@
 # Name: Micah Calloway Student ID: 010663003
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-# Use a breakpoint in the code line below to debug your script.
-# Press Ctrl+F8 to toggle the breakpoint.
-# Press the green button in the gutter to run the script.
 
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LinearRegression
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import confusion_matrix, accuracy_score
 
 
 def post_formatter_a(filename, output_name):
@@ -167,9 +159,32 @@ def post_formatter_c(filename, output_name):
 
 
 if __name__ == '__main__':
+    # Take the cleaned dataset and create data for the independent and dependent variable
+    df = pd.read_csv('post_data.csv')
+    X = df.iloc[:, :-1].values
+    y = df.iloc[:, -1].values
+
+    # Creates the test set and the training set
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+
+    # Trains the model using a decision tree classifier
+    clf = DecisionTreeClassifier(criterion='entropy', random_state=0)
+    clf.fit(X_train, y_train)
+
+    # Predicts the test set results
+    predictions = clf.predict(X_test)
+
+    # Creates a confusion matrix to verify the accuracy and prints it
+    cm = confusion_matrix(y_test, predictions)
+    accuracy = accuracy_score(y_test, predictions)
+    print(cm)
+    print(f"The accuracy is {accuracy}")
+
+
+
     #post_formatter_a('data_posts_2.csv', 'clean_posts_24.csv')
     #post_formatter_b('data_posts_2.csv', 'clean_posts_25.csv')
-    post_formatter_c('data_posts_2.csv', 'clean_posts_26.csv')
+    #post_formatter_c('data_posts_2.csv', 'clean_posts_27.csv')
 
     # dataset = pd.read_csv('data_posts_2.csv', encoding='latin-1')
     # X = dataset.iloc[:, 3].values
