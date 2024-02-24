@@ -243,8 +243,8 @@ def predict_best_time(date, hour):
             if best_time is None:
                 best_time = item[0]
 
-    print(f"The best time to post is {best_time}")
-
+    best_time = datetime.combine(date.now(), time(best_time, 0, 0))
+    print(f"The best time to post is {best_time.strftime('%I:%M %p')}")
 
 
 if __name__ == '__main__':
@@ -254,10 +254,10 @@ if __name__ == '__main__':
     y = df.iloc[:, -1].values
 
     # Creates the test set and the training set
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=10)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=7)
 
     # Trains the model using a decision tree classifier
-    clf = DecisionTreeClassifier(criterion='entropy', random_state=10)
+    clf = DecisionTreeClassifier(criterion='entropy', random_state=7)
     clf.fit(X_train, y_train)
 
     # Predicts the test set results
@@ -269,7 +269,7 @@ if __name__ == '__main__':
     print(cm)
     print(f"The accuracy is {accuracy}")
 
-    selected_hour = 0
+    selected_hour = 2
     predict_best_time(datetime.now(), time(selected_hour, 0, 0))
 
 
