@@ -178,10 +178,30 @@ def predict_best_time(date, hour):
     print(f"the utc offset is: {utc_offset}")
 
     selected_time = datetime.combine(date, hour)
+    end_of_day = datetime.combine(date.now() + timedelta(days=1), time(0, 0, 0))
     print(f"The user selected time is: {selected_time}")
+    print(f"The end of the day is: {end_of_day}")
+    times_to_predict = [selected_time]
+
+    while selected_time < (end_of_day - timedelta(hours=1)):
+        times_to_predict.append(selected_time + timedelta(hours=1))
+        selected_time = selected_time + timedelta(hours=1)
+
+    print("The times to predict are:")
+    print(times_to_predict)
 
     utc_time = selected_time + utc_offset
     print(f"The user selected time in utc is: {utc_time}")
+
+    day_of_week = utc_time.weekday()
+    print(f"the day of the week is: {day_of_week}")
+
+    hour = utc_time.hour
+    print(f"the hour in utc is: {hour}")
+
+    prediction = clf.predict([[hour, day_of_week]])
+    print(f"For the {day_of_week} day of the week on the {hour} hour "
+          f"the model predicted a {prediction} value for the post strength")
 
 
 if __name__ == '__main__':
@@ -191,10 +211,10 @@ if __name__ == '__main__':
     y = df.iloc[:, -1].values
 
     # Creates the test set and the training set
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25)
 
     # Trains the model using a decision tree classifier
-    clf = DecisionTreeClassifier(criterion='entropy', random_state=0)
+    clf = DecisionTreeClassifier(criterion='entropy')
     clf.fit(X_train, y_train)
 
     # Predicts the test set results
@@ -206,8 +226,8 @@ if __name__ == '__main__':
     print(cm)
     print(f"The accuracy is {accuracy}")
 
-    hour = 17
-    predict_best_time(datetime.now(), time(hour, 0, 0))
+    selected_hour = 10
+    predict_best_time(datetime.now(), time(selected_hour, 0, 0))
 
 
 
