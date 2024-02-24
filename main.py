@@ -187,13 +187,17 @@ def predict_best_time(date, hour):
         times_to_predict.append(selected_time + timedelta(hours=1))
         selected_time = selected_time + timedelta(hours=1)
 
-    converted_group = []
+    local_time_group = []
+    for times in times_to_predict:
+        local_time_group.append(times.hour)
 
+    local_time_group = np.array(local_time_group)
+
+    converted_group = []
     for times in times_to_predict:
         converted_group.append(times + utc_offset)
 
     prediction_group = []
-
     for times in converted_group:
         prediction_group.append([times.hour, times.weekday()])
 
@@ -219,10 +223,29 @@ def predict_best_time(date, hour):
     print(f"For the {day_of_week} day of the week on the {hour} hour "
           f"the model predicted a {prediction} value for the post strength")
 
-    predict_all = clf.predict(prediction_group)
+    selected_predictions = clf.predict(prediction_group)
 
     print("The predictions for the converted prediction groups are: ")
-    print(predict_all)
+    print(selected_predictions)
+    print(f"The local time group is: {local_time_group}")
+    print(f"The selected predictions are: {selected_predictions}")
+
+    results = np.concatenate((local_time_group.reshape(-1, 1), selected_predictions.reshape(-1, 1)), axis=1)
+
+    print("The results are: ")
+    print(results)
+    best_time = None
+    for item in results:
+        if item[1] == 0:
+            print(f"{item[0]} is not a viable hour to post")
+        if item[1] == 1:
+            print(f"{item[0]} is a good time to post")
+            if best_time is None:
+                best_time = item[0]
+
+    print(f"The best time to post is {best_time}")
+
+
 
 if __name__ == '__main__':
     # Take the cleaned dataset and create data for the independent and dependent variable
@@ -231,10 +254,10 @@ if __name__ == '__main__':
     y = df.iloc[:, -1].values
 
     # Creates the test set and the training set
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=10)
 
     # Trains the model using a decision tree classifier
-    clf = DecisionTreeClassifier(criterion='entropy')
+    clf = DecisionTreeClassifier(criterion='entropy', random_state=10)
     clf.fit(X_train, y_train)
 
     # Predicts the test set results
@@ -246,7 +269,7 @@ if __name__ == '__main__':
     print(cm)
     print(f"The accuracy is {accuracy}")
 
-    selected_hour = 10
+    selected_hour = 0
     predict_best_time(datetime.now(), time(selected_hour, 0, 0))
 
 
