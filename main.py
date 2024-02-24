@@ -187,8 +187,24 @@ def predict_best_time(date, hour):
         times_to_predict.append(selected_time + timedelta(hours=1))
         selected_time = selected_time + timedelta(hours=1)
 
+    converted_group = []
+
+    for times in times_to_predict:
+        converted_group.append(times + utc_offset)
+
+    prediction_group = []
+
+    for times in converted_group:
+        prediction_group.append([times.hour, times.weekday()])
+
     print("The times to predict are:")
     print(times_to_predict)
+
+    print("The converted times to predict are:")
+    print(converted_group)
+
+    print("The final converted prediction group is: ")
+    print(prediction_group)
 
     utc_time = selected_time + utc_offset
     print(f"The user selected time in utc is: {utc_time}")
@@ -203,6 +219,10 @@ def predict_best_time(date, hour):
     print(f"For the {day_of_week} day of the week on the {hour} hour "
           f"the model predicted a {prediction} value for the post strength")
 
+    predict_all = clf.predict(prediction_group)
+
+    print("The predictions for the converted prediction groups are: ")
+    print(predict_all)
 
 if __name__ == '__main__':
     # Take the cleaned dataset and create data for the independent and dependent variable
